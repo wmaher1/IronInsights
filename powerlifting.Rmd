@@ -13,13 +13,9 @@ library(skimr)
 library(rpart)
 ```
 
-
-
 ```{r loading_data}
 pwr_data <- read_csv("powerlifting_data.csv")
 ```
-
-
 ```{r wrangling_data}
 # wrangling and getting rid of unessecary columns
 usapl_data <- pwr_data %>% 
@@ -34,17 +30,13 @@ usapl_data <- pwr_data %>%
 usapl_data$Date <- as.Date(usapl_data$Date)
 usapl_data <- usapl_data %>% 
     filter(year(Date) == 2023)
-
 ```
-
 
 ```{r audit}
 lm_model <- lm(TotalKg ~ Squat1Kg + Bench1Kg + Deadlift1Kg,
                data = usapl_data)
 summary(lm_model)
-
 ```
-
 
 ```{r descriptive_analysis}
 mean(usapl_data$Bench1Kg)
@@ -103,7 +95,6 @@ ggplot(missing_values_excluded, aes(x = Variable, y = MissingValues, fill = Vari
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-
 ```{r partitioning}
 usapl_data <- as.data.frame(usapl_data)
 
@@ -114,15 +105,12 @@ usapl_data %>% filter(split) %>% skim
 usapl_data %>% filter(!split) %>% skim
 ```
 
-
 ```{r decision_tree}
 tree <- rpart(TotalKg ~ Squat1Kg + Bench1Kg + Deadlift1Kg, 
               data = usapl_data[split,], 
               control = rpart.control(cp=0.005))
 #summary(tree)
-
 ```
-
 
 ```{r pruning}
 # pruning based on misc
@@ -135,7 +123,4 @@ for (i in 1:length(cp.seq)) {
     cm=table(usapl_data[!split], tree.predict) 
     misc[i]=(cm[1,2]+cm[2,1])/sum(cm) 
   } # invalid prediction for "rpart" object error 
-
 ```
-
-
