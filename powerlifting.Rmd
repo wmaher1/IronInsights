@@ -69,18 +69,27 @@ ggplot(usapl_data, aes(x = Sex, y = TotalKg, fill = Sex)) +
 usapl_data %>% 
     select(TotalKg, where(is.numeric)) %>% 
     filterVarImp(.$TotalKg) %>%
-    arrange(desc(Overall))
+    arrange(desc(Overall)) %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column(var = "Variable") %>%
+    rename("Area Under ROC Curve" = 2)
 #Pearson correlation
 usapl_data %>% 
     summarise(across(where(is.numeric), ~ abs(cor(.,TotalKg, use = "complete.obs")))) %>% 
     unlist %>% 
-    sort(decreasing = TRUE)
+    sort(decreasing = TRUE) %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column(var = "Variable") %>%
+    rename(Correlation = 2)
 #Lowess R^2
 usapl_data %>% 
     filter(!is.na(TotalKg)) %>% 
     select(where(is.numeric)) %>% 
     filterVarImp(.$TotalKg, nonpara = TRUE) %>% 
-    arrange(desc(Overall)) 
+    arrange(desc(Overall)) %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column(var = "Variable") %>%
+    rename("Lowess R^2" = 2)
 ```
 
 
