@@ -90,6 +90,17 @@ usapl_data %>%
     as.data.frame() %>%
     tibble::rownames_to_column(var = "Variable") %>%
     rename("Lowess R^2" = 2)
+
+missing_values_excluded <- usapl_data %>%
+  select(-Sex, -Name, -Date) %>%
+  summarize_all(~ sum(is.na(.))) %>%
+  gather(key = "Variable", value = "MissingValues")
+missing_values_excluded
+ggplot(missing_values_excluded, aes(x = Variable, y = MissingValues, fill = Variable)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(x = "Variable", y = "Count of Missing Values", title = "Missing Values per Variable") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 
 
