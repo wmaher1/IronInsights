@@ -94,33 +94,3 @@ ggplot(missing_values_excluded, aes(x = Variable, y = MissingValues, fill = Vari
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
   theme(plot.title = element_text(hjust = 0.5))
 ```
-
-```{r partitioning}
-usapl_data <- as.data.frame(usapl_data)
-
-set.seed(456)
-split <- sample.split(usapl_data$TotalKg, SplitRatio = 0.05)
-
-usapl_data %>% filter(split) %>% skim
-usapl_data %>% filter(!split) %>% skim
-```
-
-```{r decision_tree}
-tree <- rpart(TotalKg ~ Squat1Kg + Bench1Kg + Deadlift1Kg, 
-              data = usapl_data[split,], 
-              control = rpart.control(cp=0.005))
-#summary(tree)
-```
-
-```{r pruning}
-# pruning based on misc
-cp.seq=tree$cptable[,1]
-misc <- numeric()
-for (i in 1:length(cp.seq)) {
-    tree.predict = predict(prune(tree, cp=cp.seq[i]), 
-                           usapl_data[!split,],
-                           type="class")
-    cm=table(usapl_data[!split], tree.predict) 
-    misc[i]=(cm[1,2]+cm[2,1])/sum(cm) 
-  } # invalid prediction for "rpart" object error 
-```
