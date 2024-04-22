@@ -108,5 +108,4 @@ best_lambda <- cv_model$lambda.min
 final_lasso <- glmnet(x, y, alpha = 1, lambda = best_lambda)
 coef(final_lasso)
 
-
 ```
