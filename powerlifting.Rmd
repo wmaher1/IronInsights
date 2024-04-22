@@ -16,6 +16,7 @@ library(rpart)
 ```{r loading_data}
 pwr_data <- read_csv("powerlifting_data.csv")
 ```
+
 ```{r wrangling_data}
 # wrangling and getting rid of unessecary columns
 usapl_data <- pwr_data %>% 
@@ -23,7 +24,8 @@ usapl_data <- pwr_data %>%
            Equipment == "Raw",
            Event == "SBD", 
            Sanctioned == "Yes") %>% 
-    select(Name, Sex, Squat1Kg, Bench1Kg, Deadlift1Kg, TotalKg, Dots, Date) %>% 
+    select(Name, Sex, Squat1Kg, Bench1Kg, Deadlift1Kg, TotalKg, Date,
+           Best3SquatKg, Best3BenchKg, Best3DeadliftKg) %>% 
     drop_na() 
 
 # only 2023
@@ -93,4 +95,18 @@ ggplot(missing_values_excluded, aes(x = Variable, y = MissingValues, fill = Vari
   labs(x = "Variable", y = "Count of Missing Values", title = "Missing Values per Variable") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
   theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r lasso}
+y <- usapl_data$TotalKg
+x <- data.matrix(usapl_data[, c('Squat1Kg', 'Bench1Kg', 'Deadlift1Kg')])
+
+library(glmnet)
+cv_model <- cv.glmnet(x, y, alpha = 1)
+best_lambda <- cv_model$lambda.min
+
+final_lasso <- glmnet(x, y, alpha = 1, lambda = best_lambda)
+coef(final_lasso)
+
+
 ```
