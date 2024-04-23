@@ -11,6 +11,8 @@ library(caret)
 library(caTools)
 library(skimr)
 library(rpart)
+library(caTools)
+library(skimr)
 ```
 
 ```{r loading_data}
@@ -24,8 +26,7 @@ usapl_data <- pwr_data %>%
            Equipment == "Raw",
            Event == "SBD", 
            Sanctioned == "Yes") %>% 
-    select(Name, Sex, Squat1Kg, Bench1Kg, Deadlift1Kg, TotalKg, Date,
-           Best3SquatKg, Best3BenchKg, Best3DeadliftKg) %>% 
+    select(Name, Sex, Squat1Kg, Bench1Kg, Deadlift1Kg, TotalKg, Date) %>% 
     drop_na() 
 
 # only 2023
@@ -34,11 +35,6 @@ usapl_data <- usapl_data %>%
     filter(year(Date) == 2023)
 ```
 
-```{r audit}
-lm_model <- lm(TotalKg ~ Squat1Kg + Bench1Kg + Deadlift1Kg,
-               data = usapl_data)
-summary(lm_model)
-```
 
 ```{r descriptive_analysis}
 mean(usapl_data$Bench1Kg)
@@ -97,6 +93,14 @@ ggplot(missing_values_excluded, aes(x = Variable, y = MissingValues, fill = Vari
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
+
+```{r linear_model}
+lm_model <- lm(TotalKg ~ Squat1Kg + Bench1Kg + Deadlift1Kg,
+               data = usapl_data)
+summary(lm_model)
+```
+
+
 ```{r lasso}
 y <- usapl_data$TotalKg
 x <- data.matrix(usapl_data[, c('Squat1Kg', 'Bench1Kg', 'Deadlift1Kg')])
@@ -107,5 +111,66 @@ best_lambda <- cv_model$lambda.min
 
 final_lasso <- glmnet(x, y, alpha = 1, lambda = best_lambda)
 coef(final_lasso)
-
 ```
+
+
+```{r}
+usapl_data2 <- pwr_data %>% 
+    filter(Federation == "USAPL",
+           Equipment == "Raw",
+           Event == "SBD",
+           Sanctioned == "Yes") %>% 
+    select(Name, Sex, 
+           Squat1Kg, Squat2Kg, Squat3Kg, Best3SquatKg,
+           Bench1Kg, Bench2Kg, Bench3Kg, Best3BenchKg, 
+           Deadlift1Kg, Deadlift2Kg, Deadlift3Kg, Best3DeadliftKg, 
+           TotalKg, Date, Age, AgeClass, Division, BodyweightKg, 
+           WeightClassKg) %>% 
+    drop_na()
+
+usapl_data2$Date <- as.Date(usapl_data2$Date)
+usapl_data2 <- usapl_data2 %>% 
+    filter(year(Date) == 2023) 
+
+    
+```
+
+
+```{r squat}
+squat_lm <- lm(Best3SquatKg ~ Squat1Kg + Squat2Kg + Squat3Kg, usapl_data2)
+summary(squat_lm)
+```
+
+```{r bench}
+bench_lm <- lm(Best3BenchKg ~ Bench1Kg + Bench2Kg + Bench3Kg, usapl_data2)
+summary(bench_lm)
+```
+
+```{r deadlift}
+deadlift_lm <- lm(Best3DeadliftKg ~ Deadlift1Kg + Deadlift2Kg + Deadlift3Kg,
+                  usapl_data2)
+summary(deadlift_lm)
+```
+
+
+```{r partitioning}
+set.seed(1234)
+split = sample.split(usapl_data$TotalKg, SplitRatio = 0.5)
+
+usapl_data %>% 
+    filter(split) %>% skim
+
+usapl_data %>% 
+    filter(!split) %>% skim
+
+data <- as.data.frame(usapl_data)
+```
+
+
+
+
+```{r}
+full <- lm(TotalKg ~ Squat1Kg + Bench1Kg + Deadlift1Kg, data = data[split,])
+summary(full)
+```
+
