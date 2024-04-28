@@ -94,19 +94,6 @@ ggplot(missing_values_excluded, aes(x = Variable, y = MissingValues, fill = Vari
 ```
 
 
-```{r lasso}
-y <- usapl_data$TotalKg
-x <- data.matrix(usapl_data[, c('Squat1Kg', 'Bench1Kg', 'Deadlift1Kg')])
-
-library(glmnet)
-cv_model <- cv.glmnet(x, y, alpha = 1)
-best_lambda <- cv_model$lambda.min
-
-final_lasso <- glmnet(x, y, alpha = 1, lambda = best_lambda)
-coef(final_lasso)
-```
-
-
 ```{r}
 usapl_data2 <- pwr_data %>% 
     filter(Federation == "USAPL",
@@ -143,9 +130,25 @@ data <- as.data.frame(usapl_data)
 ```
 
 
-
-```{r}
+```{r linear_model}
 full <- lm(TotalKg ~ Squat1Kg + Bench1Kg + Deadlift1Kg, data = data[split,])
 summary(full)
+```
+
+
+```{r lasso}
+y <- data[split,]$TotalKg
+x <- data.matrix(usapl_data[split,][,c('Squat1Kg','Bench1Kg','Deadlift1Kg')])
+
+cv_model <- cv.glmnet(x, y, alpha = 1)
+best_lambda <- cv_model$lambda.min
+
+final_lasso <- glmnet(x, y, alpha = 1, lambda = best_lambda)
+coef(final_lasso)
+```
+
+
+```{r ridge}
+
 ```
 
