@@ -94,13 +94,6 @@ ggplot(missing_values_excluded, aes(x = Variable, y = MissingValues, fill = Vari
 ```
 
 
-```{r linear_model}
-lm_model <- lm(TotalKg ~ Squat1Kg + Bench1Kg + Deadlift1Kg,
-               data = usapl_data)
-summary(lm_model)
-```
-
-
 ```{r lasso}
 y <- usapl_data$TotalKg
 x <- data.matrix(usapl_data[, c('Squat1Kg', 'Bench1Kg', 'Deadlift1Kg')])
@@ -136,23 +129,6 @@ usapl_data2 <- usapl_data2 %>%
 ```
 
 
-```{r squat}
-squat_lm <- lm(Best3SquatKg ~ Squat1Kg + Squat2Kg + Squat3Kg, usapl_data2)
-summary(squat_lm)
-```
-
-```{r bench}
-bench_lm <- lm(Best3BenchKg ~ Bench1Kg + Bench2Kg + Bench3Kg, usapl_data2)
-summary(bench_lm)
-```
-
-```{r deadlift}
-deadlift_lm <- lm(Best3DeadliftKg ~ Deadlift1Kg + Deadlift2Kg + Deadlift3Kg,
-                  usapl_data2)
-summary(deadlift_lm)
-```
-
-
 ```{r partitioning}
 set.seed(1234)
 split = sample.split(usapl_data$TotalKg, SplitRatio = 0.5)
@@ -165,7 +141,6 @@ usapl_data %>%
 
 data <- as.data.frame(usapl_data)
 ```
-
 
 
 
