@@ -13,6 +13,7 @@ library(skimr)
 library(rpart)
 library(caTools)
 library(skimr)
+library(glmnet)
 ```
 
 ```{r loading_data}
@@ -138,7 +139,7 @@ summary(full)
 
 ```{r lasso}
 y <- data[split,]$TotalKg
-x <- data.matrix(usapl_data[split,][,c('Squat1Kg','Bench1Kg','Deadlift1Kg')])
+x <- data.matrix(data[split,][,c('Squat1Kg','Bench1Kg','Deadlift1Kg')])
 
 cv_model <- cv.glmnet(x, y, alpha = 1)
 best_lambda <- cv_model$lambda.min
@@ -149,6 +150,19 @@ coef(final_lasso)
 
 
 ```{r ridge}
+# using glmnet
+x <- data.matrix(data[split,][,c('Squat1Kg','Bench1Kg','Deadlift1Kg')])
+y <- data[split,][,'TotalKg']
 
+lambda_seq <- 10^seq(2, -2, by = -.1)
+ridge_fit <- glmnet(x, y, alpha = 0, lambda = lambda_seq)
+
+ridge_cv <- cv.glmnet(x, y, alpha = 0, lambda = lambda_seq)
+best_lambda_ridge <- ridge_cv$lambda.min
+
+best_fit_ridge <- ridge_cv$glmnet.fit
+head(best_fit_ridge)
+
+final_ridge <- glmnet(x, y, alpha = 0, lambda = 79.43282347)
 ```
 
