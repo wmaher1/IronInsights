@@ -14,6 +14,7 @@ library(rpart)
 library(caTools)
 library(skimr)
 library(glmnet)
+library(pROC)
 ```
 
 ```{r loading_data}
@@ -163,6 +164,15 @@ best_lambda_ridge <- ridge_cv$lambda.min
 best_fit_ridge <- ridge_cv$glmnet.fit
 head(best_fit_ridge)
 
-final_ridge <- glmnet(x, y, alpha = 0, lambda = 79.43282347)
+final_ridge <- glmnet(x, y, alpha = 0, lambda = best_lambda_ridge)
+coef(final_ridge)
+```
+
+
+```{r}
+# linear
+
+
+
 ```
 
