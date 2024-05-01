@@ -1,0 +1,29 @@
+---
+title: "Final Model"
+author: "Melissa Wright"
+date: "2024-04-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
+```{r}
+pwr <- readRDS("pwrlift.rds")
+
+training <- pwr %>%
+    filter(year == 2023) %>%
+    select(!year)
+
+validation <- pwr %>%
+    filter(year == 2024) %>%
+    select(!year)
+```
+
+This RDS file contains only data from raw lifters competing in the USAPL federation. Additionally, it only contains relevant variables and removed observations where a lifter failed to complete all three attempts at any of the three lifts.
+
+We will use 2023 data as training data and 2024 data as validation data. There are fewer observations in the validation data set, but it is not too extreme. 
+
+
+
