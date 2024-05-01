@@ -162,7 +162,7 @@ ridge_cv <- cv.glmnet(x, y, alpha = 0, lambda = lambda_seq)
 best_lambda_ridge <- ridge_cv$lambda.min
 
 best_fit_ridge <- ridge_cv$glmnet.fit
-head(best_fit_ridge)
+ s
 
 final_ridge <- glmnet(x, y, alpha = 0, lambda = best_lambda_ridge)
 coef(final_ridge)
