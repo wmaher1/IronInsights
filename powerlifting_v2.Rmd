@@ -26,4 +26,7 @@ This RDS file contains only data from raw lifters competing in the USAPL federat
 We will use 2023 data as training data and 2024 data as validation data. There are fewer observations in the validation data set, but it is not too extreme. 
 
 
+```{r lasso}
+
+```
 
