@@ -50,6 +50,8 @@ y <- training$total
 cv_model <- cv.glmnet(x, y, alpha = 1)
 best_lambda <- cv_model$lambda.min
 
+plot(cv_model)
+
 final_lasso <- glmnet(x, y, alpha = 1, lambda = best_lambda)
 coef(final_lasso)
 ```
@@ -65,12 +67,16 @@ ridge_fit <- glmnet(x, y, alpha = 0, lambda = lambda_seq)
 ridge_cv <- cv.glmnet(x, y, alpha = 0, lambda = lambda_seq)
 best_lambda_ridge <- ridge_cv$lambda.min
 
+plot(ridge_cv)
+
 best_fit_ridge <- ridge_cv$glmnet.fit
 #head(best_fit_ridge)
 
 final_ridge <- glmnet(x, y, alpha = 0, lambda = best_lambda_ridge)
 coef(final_ridge)
+
 ```
+
 
 ```{r}
 pred.linear <- predict(linear.mdl, newdata = validation)
@@ -101,5 +107,36 @@ actual <- validation$total
 
 mse.ridge <- mean((pred.ridge - actual)^2)
 mse.ridge
+
+plot(pred.ridge, actual, 
+     xlab = "Predicted Total",
+     ylab = "Actual Total",
+     main = "Ridge Predicted vs Actual")
+abline(lm(actual ~ pred.ridge), col = "red")
+```
+
+
+```{r}
+df <- data.frame(pred.ridge = pred.ridge, actual = actual)
+
+# Create the plot
+ggplot(df, aes(x = pred.ridge, y = actual)) +
+  geom_point(alpha = 0.5) +
+  geom_abline(intercept = coef(lm(actual ~ pred.ridge))[1], slope = coef(lm(actual ~ pred.ridge))[2], color = "red") +
+  labs(x = "Predicted Total", y = "Actual Total", title = "Ridge Predicted vs Actual") +
+    theme(plot.title = element_text(hjust = 0.5)) +
+    theme_minimal()
+```
+
+
+```{r}
+df2 <- data.frame(pred.lasso = pred.lasso, actual = actual)
+
+ggplot(df, aes(x = pred.lasso, y = actual)) +
+  geom_point(alpha = 0.5) +
+  geom_abline(intercept = coef(lm(actual ~ pred.lasso))[1], slope = coef(lm(actual ~ pred.lasso))[2], color = "red") +
+  labs(x = "Predicted Total", y = "Actual Total", title = "Lasso Predicted vs Actual") +
+    theme(plot.title = element_text(hjust = 0.5)) +
+    theme_minimal()
 ```
 
