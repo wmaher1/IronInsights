@@ -8,26 +8,29 @@ output: html_document
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(glmnet)
+library(naniar)
 ```
 
 ```{r}
-pwr <- readRDS("pwrlift.rds") 
+pwr <- readRDS("pwrlift.rds") %>% 
+    mutate(across(where(is.character), as.factor))
 
-training <- pwr %>%
+training <- pwr %>% 
     filter(year == 2023) %>%
-    select(!year) %>% 
-    drop_na() 
+    select(-c(year, name)) %>% 
+    drop_na()
 
 validation <- pwr %>%
     filter(year == 2024) %>%
-    select(!year) %>% 
-    drop_na()
+    select(-c(year, name)) 
 
 ```
 
 This RDS file contains only data from raw lifters competing in the USAPL federation. Additionally, it only contains relevant variables and removed observations where a lifter failed to complete all three attempts at any of the three lifts.
 
 We will use 2023 data as training data and 2024 data as validation data. There are fewer observations in the validation data set, but it is not too extreme. 
+
+
 
 
 ```{r linear}
