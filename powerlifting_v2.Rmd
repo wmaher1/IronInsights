@@ -9,6 +9,8 @@ output: html_document
 library(tidyverse)
 library(glmnet)
 library(naniar)
+library(RANN)
+library(caret)
 ```
 
 ```{r}
@@ -17,8 +19,7 @@ pwr <- readRDS("pwrlift.rds") %>%
 
 training <- pwr %>% 
     filter(year == 2023) %>%
-    select(-c(year, name)) %>% 
-    drop_na()
+    select(-c(year, name)) 
 
 validation <- pwr %>%
     filter(year == 2024) %>%
@@ -30,6 +31,25 @@ This RDS file contains only data from raw lifters competing in the USAPL federat
 
 We will use 2023 data as training data and 2024 data as validation data. There are fewer observations in the validation data set, but it is not too extreme. 
 
+
+```{r imputation}
+training <- as.data.frame(training)
+test = preProcess(training %>% select(-c(div, total)), method = "knnImpute") # remove total and division (too many levels)
+train.imp <- predict(test, training)
+vars.na <- train.imp %>% select_if(colSums(is.na(.))>0) %>% names
+vars.na
+missprop<-train.imp %>% summarise(across(everything(), ~ sum(is.na(.))/length(.)))
+print(missprop)
+
+
+validation <- as.data.frame(validation)
+test = preProcess(validation %>% select(-c(div, total)), method = "knnImpute") # remove total and division (too many levels)
+validation.imp <- predict(test, validation)
+vars.na <- validation.imp %>% select_if(colSums(is.na(.))>0) %>% names
+vars.na
+missprop <- validation.imp %>% summarise(across(everything(), ~ sum(is.na(.))/length(.)))
+print(missprop)
+```
 
 
 
@@ -43,10 +63,15 @@ summary(linear.mdl2)
 
 
 ```{r lasso}
-x <- data.matrix(training[,c('squat1', 'bench1', 'pull1')])
+x <- data.matrix(train.imp[,c('squat1', 'bench1', 'pull1',
+                              'squat2', 'bench2', 'pull2', 
+                              'div', 'weight', 'age')])
 
-y <- training$total
+x <- data.matrix(train.imp[,c('squat1', 'bench1', 'pull1')])
 
+y <- train.imp$total
+
+# k fold cv for optimal lambda
 cv_model <- cv.glmnet(x, y, alpha = 1)
 best_lambda <- cv_model$lambda.min
 
@@ -64,6 +89,7 @@ y
 lambda_seq <- 10^seq(2, -2, by = -.1)
 ridge_fit <- glmnet(x, y, alpha = 0, lambda = lambda_seq)
 
+# k fold cv for optimal lambda
 ridge_cv <- cv.glmnet(x, y, alpha = 0, lambda = lambda_seq)
 best_lambda_ridge <- ridge_cv$lambda.min
 
@@ -89,10 +115,12 @@ mse.linear
 
 
 ```{r}
-x_test <- data.matrix(validation[,c('squat1', 'bench1', 'pull1')])
+x_test <- data.matrix(validation.imp[,c('squat1', 'bench1', 'pull1',
+                              'squat2', 'bench2', 'pull2', 
+                              'div', 'weight', 'age')])
 
 pred.lasso <- predict(final_lasso, newx = x_test)
-actual <- validation$total
+actual <- validation.imp$total
 
 mse.lasso <- mean((pred.lasso - actual)^2)
 mse.lasso
@@ -100,10 +128,12 @@ mse.lasso
 
 
 ```{r}
-x_test <- data.matrix(validation[,c('squat1', 'bench1', 'pull1')])
+x_test <- data.matrix(validation.imp[,c('squat1', 'bench1', 'pull1',
+                                    'squat2', 'bench2', 'pull2', 
+                                    'div', 'weight', 'age')])
 
 pred.ridge <- predict(final_ridge, newx = x_test)
-actual <- validation$total
+actual <- validation.imp$total
 
 mse.ridge <- mean((pred.ridge - actual)^2)
 mse.ridge
