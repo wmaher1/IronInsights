@@ -96,83 +96,13 @@ ggplot(missing_values_excluded, aes(x = Variable, y = MissingValues, fill = Vari
 ```
 
 
-```{r}
-usapl_data2 <- pwr_data %>% 
-    filter(Federation == "USAPL",
-           Equipment == "Raw",
-           Event == "SBD",
-           Sanctioned == "Yes") %>% 
-    select(Name, Sex, 
-           Squat1Kg, Squat2Kg, Squat3Kg, Best3SquatKg,
-           Bench1Kg, Bench2Kg, Bench3Kg, Best3BenchKg, 
-           Deadlift1Kg, Deadlift2Kg, Deadlift3Kg, Best3DeadliftKg, 
-           TotalKg, Date, Age, AgeClass, Division, BodyweightKg, 
-           WeightClassKg) %>% 
-    drop_na()
-
-usapl_data2$Date <- as.Date(usapl_data2$Date)
-usapl_data2 <- usapl_data2 %>% 
-    filter(year(Date) == 2023) 
-
-    
-```
-
-
-```{r partitioning}
-set.seed(1234)
-split = sample.split(usapl_data$TotalKg, SplitRatio = 0.5)
-
-usapl_data %>% 
-    filter(split) %>% skim
-
-usapl_data %>% 
-    filter(!split) %>% skim
-
-data <- as.data.frame(usapl_data)
-```
-
-
-```{r linear_model}
-full <- lm(TotalKg ~ Squat1Kg + Bench1Kg + Deadlift1Kg, data = data[split,])
-summary(full)
-```
-
-
-```{r lasso}
-y <- data[split,]$TotalKg
-x <- data.matrix(data[split,][,c('Squat1Kg','Bench1Kg','Deadlift1Kg')])
-
-cv_model <- cv.glmnet(x, y, alpha = 1)
-best_lambda <- cv_model$lambda.min
-
-final_lasso <- glmnet(x, y, alpha = 1, lambda = best_lambda)
-coef(final_lasso)
-```
-
-
-```{r ridge}
-# using glmnet
-x <- data.matrix(data[split,][,c('Squat1Kg','Bench1Kg','Deadlift1Kg')])
-y <- data[split,][,'TotalKg']
-
-lambda_seq <- 10^seq(2, -2, by = -.1)
-ridge_fit <- glmnet(x, y, alpha = 0, lambda = lambda_seq)
-
-ridge_cv <- cv.glmnet(x, y, alpha = 0, lambda = lambda_seq)
-best_lambda_ridge <- ridge_cv$lambda.min
-
-best_fit_ridge <- ridge_cv$glmnet.fit
-
-
-final_ridge <- glmnet(x, y, alpha = 0, lambda = best_lambda_ridge)
-coef(final_ridge)
-```
-
-
-```{r}
-# linear
 
 
 
-```
+
+
+
+
+
+
 
