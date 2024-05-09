@@ -1,6 +1,6 @@
 ---
-title: "Final Model"
-author: "Melissa Wright"
+title: "Regression Models"
+author: "Will Maher"
 date: "2024-04-30"
 output: html_document
 ---
@@ -43,7 +43,6 @@ print(missprop)
 
 
 validation <- as.data.frame(validation)
-test = preProcess(validation %>% select(-c(div, total)), method = "knnImpute") # remove total and division (too many levels)
 validation.imp <- predict(test, validation)
 vars.na <- validation.imp %>% select_if(colSums(is.na(.))>0) %>% names
 vars.na
@@ -65,9 +64,7 @@ summary(linear.mdl2)
 ```{r lasso}
 x <- data.matrix(train.imp[,c('squat1', 'bench1', 'pull1',
                               'squat2', 'bench2', 'pull2', 
-                              'div', 'weight', 'age')])
-
-x <- data.matrix(train.imp[,c('squat1', 'bench1', 'pull1')])
+                              'div', 'weight', 'sex')])
 
 y <- train.imp$total
 
@@ -83,7 +80,9 @@ coef(final_lasso)
 
 
 ```{r ridge}
-x
+x <- data.matrix(train.imp[,c('squat1', 'bench1', 'pull1',
+                              'squat2', 'bench2', 'pull2', 
+                              'div', 'weight', 'sex')])
 y
 
 lambda_seq <- 10^seq(2, -2, by = -.1)
@@ -100,7 +99,7 @@ best_fit_ridge <- ridge_cv$glmnet.fit
 
 final_ridge <- glmnet(x, y, alpha = 0, lambda = best_lambda_ridge)
 coef(final_ridge)
-
+# look into significance
 ```
 
 
@@ -117,20 +116,25 @@ mse.linear
 ```{r}
 x_test <- data.matrix(validation.imp[,c('squat1', 'bench1', 'pull1',
                               'squat2', 'bench2', 'pull2', 
-                              'div', 'weight', 'age')])
+                              'div', 'weight', 'sex')])
 
 pred.lasso <- predict(final_lasso, newx = x_test)
 actual <- validation.imp$total
 
 mse.lasso <- mean((pred.lasso - actual)^2)
 mse.lasso
+
+sse.lasso <- sum((pred.lasso - actual)^2)
+sst <- sum((actual - mean(actual))^2)
+
+1 - (sse.lasso / sst)
 ```
 
 
 ```{r}
 x_test <- data.matrix(validation.imp[,c('squat1', 'bench1', 'pull1',
                                     'squat2', 'bench2', 'pull2', 
-                                    'div', 'weight', 'age')])
+                                    'div', 'weight', 'sex')])
 
 pred.ridge <- predict(final_ridge, newx = x_test)
 actual <- validation.imp$total
@@ -138,11 +142,11 @@ actual <- validation.imp$total
 mse.ridge <- mean((pred.ridge - actual)^2)
 mse.ridge
 
-plot(pred.ridge, actual, 
-     xlab = "Predicted Total",
-     ylab = "Actual Total",
-     main = "Ridge Predicted vs Actual")
-abline(lm(actual ~ pred.ridge), col = "red")
+sse.ridge <- sum((pred.ridge - actual)^2)
+sst <- sum((actual - mean(actual))^2)
+
+1 - (sse.ridge/sst)
+
 ```
 
 
