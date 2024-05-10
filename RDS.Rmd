@@ -1,0 +1,54 @@
+---
+title: "RDS"
+author: "Melissa Wright"
+date: "2024-04-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(janitor)
+pwrlift <- read_csv("powerlifting.csv")
+```
+
+```{r}
+pwr <- pwrlift %>%
+    filter(Event == "SBD",
+           Federation == "USAPL",
+           Equipment == "Raw",
+           Best3SquatKg > 0,
+           Best3BenchKg > 0,
+           Best3DeadliftKg > 0,
+           !is.na(TotalKg)) %>%
+    mutate(year = as.numeric(format(Date, "%Y"))) %>%
+    select(Name, Sex, Bench1Kg, Bench2Kg, Squat1Kg, 
+           Squat2Kg, Deadlift1Kg, Deadlift2Kg,
+           TotalKg, BodyweightKg, Age, Division, year) %>%
+    rename(weight = BodyweightKg,
+           squat1 = Squat1Kg,
+           squat2 = Squat2Kg,
+           bench1 = Bench1Kg,
+           bench2 = Bench2Kg,
+           pull1 = Deadlift1Kg,
+           pull2 = Deadlift2Kg,
+           total = TotalKg) %>%
+    clean_names() %>%
+    mutate(bench1 = replace(bench1, which (bench1 < 0), NA),
+           bench2 = replace(bench2, which (bench2 < 0), NA),
+           squat1 = replace(squat1, which (squat1 < 0), NA),
+           squat2 = replace(squat2, which (squat2 < 0), NA),
+           pull1 = replace(pull1, which (pull1 < 0), NA),
+           pull2 = replace(pull2, which (pull2 < 0), NA),
+           across(where(is.character), as.factor),
+           div = case_when(str_sub(division, 4, 4) == "M" ~ "Masters",
+                           str_sub(division, 4, 4) == "J" ~ "Juniors",
+                           str_sub(division, 4, 4) == "T" ~ "Teen",
+                           str_sub(division, 4, 4) == "Y"~ "Youth",
+                           str_sub(division, 4, 4) == "O"~ "Open",
+                           T ~ "Other")) %>%
+    select(!division)
+
+saveRDS(pwr, "pwrlift.rds")
+```
+
+

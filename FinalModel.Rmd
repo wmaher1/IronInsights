@@ -1,0 +1,67 @@
+---
+title: "Final Model"
+author: "Melissa Wright"
+date: "2024-04-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(rpart)
+library(partykit)
+library(caret)
+```
+
+```{r}
+pwr <- readRDS("pwrlift.rds") 
+
+training <- pwr %>%
+    filter(year == 2023) %>%
+    select(!year)
+
+validation <- pwr %>%
+    filter(year == 2024) %>%
+    select(!year)
+```
+
+This RDS file contains only data from raw lifters competing in the USAPL federation. Additionally, it only contains relevant variables and removed observations where a lifter failed to complete all three attempts at any of the three lifts.
+
+We will use 2023 data as training data and 2024 data as validation data. There are fewer observations in the validation data set, but it is not too extreme. 
+
+```{r}
+trainingdt <- training %>% select(!name)
+validationdt <- validation %>% select(!name)
+
+dt <- rpart(total ~ ., data = trainingdt, control=rpart.control(cp=0.00005))
+```
+
+```{r}
+cp.seq = dt$cptable[,1]
+mse <- numeric()
+
+for (i in 1:length(cp.seq)) {
+    dt.predict <- predict(prune(dt, cp = cp.seq[i]), validationdt, type = "vector")
+    mse[i] = sum((dt.predict - validationdt$total)^2)/length(dt.predict)
+}
+
+min(mse)
+
+plot(dt$cptable[,'nsplit'] + 1, mse, type = "o", xlab = "Number of Leaves", ylab="Mean Square Error")
+```
+
+```{r}
+final.dt <- prune(dt, cp=cp.seq[mse==min(mse)])
+final.predict <- predict(final.dt, validationdt, type = "vector")
+
+num <- sum((final.predict - validationdt$total)^2)
+den <- sum((validationdt$total - mean(validationdt$total))^2)
+plot(as.party(final.dt))
+summary(final.dt)
+print(final.dt)
+1 - num/den
+```
+
+
+
+
+
